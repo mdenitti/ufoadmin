@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,7 +72,24 @@ Route::get('/export/csv2', function(){
     $csvExporter->build($aliens, ['email', 'location'])->download();
 })->middleware('auth')->name('export2');
 
+Route::post('/export/csv3', function(Request $request){
+   
+    //dd($request->all());
 
+    $startDate = Carbon::parse($request->startDate);
+    $endDate = Carbon::parse($request->endDate);
+
+    if ($request->startDate == null || $request->endDate == null) {
+        $aliens = App\Models\Alien::with('abilities')->get();
+    } else {
+        $aliens = App\Models\Alien::with('abilities')
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->get();
+    }
+    $csvExporter = new \Laracsv\Export();
+    $csvExporter->build($aliens, ['email', 'location'])->download();
+
+})->middleware('auth')->name('export3');
 
 
 // second way to protect routes with auth middleware using a group function
