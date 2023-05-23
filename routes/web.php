@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Intervention\Image\Facades\Image;
 
 /*
 |--------------------------------------------------------------------------
@@ -133,16 +134,54 @@ Route::post('/upload',function(Request $request) {
 // })-> middleware('auth')->name('upload');
 
 route::post('/upload', function(request $request) {
-    // Validate file MIME type
-    $validatedData = $request->validate([
-        'file' => 'required|mimes:jpeg,png,gif',
-    ]);
+    try {
+        // Validate file MIME type
+        $validatedData = $request->validate([
+            'file' => 'required|mimes:jpeg,png,gif',
+        ]);
 
-    // Handle file upload
-    $fileName = $request->file->getClientOriginalName();
-    $request->file->move(public_path('storage'), $fileName);
+        // Handle file upload
+        $fileName = $request->file->getClientOriginalName();
+        $request->file->move(public_path('storage'), $fileName);
 
-    // Pass the image URL to the view
-    $imageUrl = asset('storage/' . $fileName);
-    return view('IMGupload', compact('imageUrl'));
+        // Check if the modified image exists in the cache
+        $cacheKey = 'modified_image_' . $fileName;
+        $imageUrl = Cache::get($cacheKey);
+
+        if (!$imageUrl) {
+            // Resize the uploaded image while maintaining aspect ratio
+            $image = Image::make(public_path('storage/' . $fileName))->resize(300, null, function ($constraint) {
+                $constraint->aspectRatio();
+            });
+
+            // Add watermark
+            $watermark = Image::make(public_path('watermark.png'));
+
+            // Resize the watermark based on the dimensions of the resized image
+            $watermarkWidth = $image->width() * 0.25; // Adjust the watermark size as needed
+            $watermarkHeight = $watermark->height() * ($watermarkWidth / $watermark->width());
+            $watermark->resize($watermarkWidth, $watermarkHeight);
+
+            // Position the watermark at the bottom right corner with a margin of 10 pixels
+            $x = $image->width() - $watermark->width() - 10;
+            $y = $image->height() - $watermark->height() - 10;
+            $image->insert($watermark, 'top-left', $x, $y);
+
+            // Save the modified image
+            $image->save(public_path('storage/' . $fileName));
+
+            // Generate the image URL
+            $imageUrl = asset('storage/' . $fileName);
+
+            // Cache the image URL for future requests
+            Cache::put($cacheKey, $imageUrl, 1440); // Cache for 24 hours (1440 minutes)
+        }
+
+        return view('IMGupload', compact('imageUrl'));
+    } catch (\Exception $e) {
+        // Handle the exception
+        $errorMessage = $e->getMessage();
+        $imageUrl = null;
+        return view('IMGupload', compact('errorMessage', 'imageUrl'));
+    }
 })->middleware('auth')->name('upload');
