@@ -100,8 +100,8 @@ Route::post('/upload',function(Request $request) {
     $fileName = $request->file->getClientOriginalName();
     $request->file->move(public_path('storage'), $fileName);
 
-    // $request->file->store('public');
-    // $request->file->storeAs('public', 'test.jpg');
+    $request->file->store('public');
+    $request->file->storeAs('public', 'test.jpg');
 
     // return succes response
     return response()->json(['success'=>'You have successfully upload file.']);
@@ -125,9 +125,24 @@ Route::post('/upload',function(Request $request) {
 }); */
 
 // route post upload file
+// route::post('/upload', function(request $request) {
+//     $fileName = $request->file->getClientOriginalName();
+//     $request->file->move(public_path('storage'), $fileName);
+//     return response()->json(['success' => 'The file has been successfully uploaded, motherfucker!']);
+
+// })-> middleware('auth')->name('upload');
+
 route::post('/upload', function(request $request) {
+    // Validate file MIME type
+    $validatedData = $request->validate([
+        'file' => 'required|mimes:jpeg,png,gif',
+    ]);
+
+    // Handle file upload
     $fileName = $request->file->getClientOriginalName();
     $request->file->move(public_path('storage'), $fileName);
-    return response()->json(['success' => 'The file has been successfully uploaded, motherfucker!']);
 
-})-> middleware('auth')->name('upload');
+    // Pass the image URL to the view
+    $imageUrl = asset('storage/' . $fileName);
+    return view('IMGupload', compact('imageUrl'));
+})->middleware('auth')->name('upload');
