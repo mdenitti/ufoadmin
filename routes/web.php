@@ -106,3 +106,11 @@ Route::post('/export/csv3', function(Request $request){
         return "export aliens";
     });
 }); */
+
+// route post upload file
+route::post('/upload', function(request $request) {
+    $fileName = $request->file->getClientOriginalName();
+    $request->file->move(public_path('storage'), $fileName);
+    return response()->json(['success' => 'The file has been successfully uploaded, motherfucker!']);
+
+})-> middleware('auth')->name('upload');
