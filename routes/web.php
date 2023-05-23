@@ -161,6 +161,7 @@ route::post('/upload', function(request $request) {
             $watermarkWidth = $image->width() * 0.25; // Adjust the watermark size as needed
             $watermarkHeight = $watermark->height() * ($watermarkWidth / $watermark->width());
             $watermark->resize($watermarkWidth, $watermarkHeight);
+            $watermark->opacity(50); // Adjust the opacity of the watermark image as needed
 
             // Position the watermark at the bottom right corner with a margin of 10 pixels
             $x = $image->width() - $watermark->width() - 10;
