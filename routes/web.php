@@ -92,6 +92,23 @@ Route::post('/export/csv3', function(Request $request){
 })->middleware('auth')->name('export3');
 
 
+// upload route 
+Route::post('/upload',function(Request $request) {
+
+    // dd($request->file->getClientOriginalName());
+
+    $fileName = $request->file->getClientOriginalName();
+    $request->file->move(public_path('storage'), $fileName);
+
+    // $request->file->store('public');
+    // $request->file->storeAs('public', 'test.jpg');
+
+    // return succes response
+    return response()->json(['success'=>'You have successfully upload file.']);
+
+
+})->middleware('auth')->name('upload');
+
 // second way to protect routes with auth middleware using a group function
 /* Route::middleware('auth')->group(function () {
     Route::get('/test', function(){
