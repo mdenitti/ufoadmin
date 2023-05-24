@@ -187,29 +187,22 @@ route::post('/csvupload', function(Request $request) {
             // Check if email already exists in Alien model
             $existingAlien = App\Models\Alien::where('email', $email)->first();
             if ($existingAlien) {
-                // Handle duplicate email, such as skipping or logging the entry
-                continue; // Skip the current iteration
+                session()->flash('message', 'Import succesfull. But some duplicate emails found and not added.');
+            } else {
+                $alien = new App\Models\Alien;
+                $alien->name = $name;
+                $alien->email = $email;
+                $alien->location = $location;
+                $alien->date = $date;
+                $alien->time = $time;
+                $alien->save();
+                session()->flash('message', 'Import successful.');
             }
             
-            $existingEmails[] = $email;
-
-            $alien = new App\Models\Alien;
-            $alien->name = $name;
-            $alien->email = $email;
-            $alien->location = $location;
-            $alien->date = $date;
-            $alien->time = $time;
-
-            $alien->save();
         }
         fclose($handle);
 
-        // Set session message based on import success
-        if (count($existingEmails) > 0) {
-            session()->flash('message', 'Import failed. Duplicate emails found.');
-        } else {
-            session()->flash('message', 'Import successful.');
-        }
+       
     }
 
     return redirect()->back();

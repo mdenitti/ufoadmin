@@ -115,7 +115,7 @@
                                     </form>
 
                                     @if (session('message'))
-                                        <div class="alert alert-primary">
+                                        <div class="alert alert-primary mt-2">
                                             {{ session('message') }}
                                         </div>
                                     @endif
