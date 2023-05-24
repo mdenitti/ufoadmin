@@ -55,10 +55,10 @@ Route::get('/export/csv', function(){
     $csvEport = "";
     foreach ($aliens as $alien) {
         // export the alien name, email and location and implode the abilities
-        $csvEport .= $alien->name . ",".$alien->email.",".$alien->location.",".implode(",",$alien->abilities->pluck('name')->toArray())."\n";
-        // $csvEport .= $alien->name . ",".$alien->email.",".$alien->location."\n";
+       // IMPLODE/RELATIONS FF NIET -  $csvEport .= $alien->name . ",".$alien->email.",".$alien->location.",".implode(",",$alien->abilities->pluck('name')->toArray())."\n";
+       $csvEport .= $alien->name . "," . $alien->email . "," . $alien->location . "," . $alien->date . "," . $alien->time . "," . $alien->scary . "\n";
     }
-    // return the csv file
+       // return the csv file
     return response($csvEport, 200, [
         'Content-Type' => 'text/csv',
         'Content-Disposition' => 'attachment; filename="aliensExport.csv"'
@@ -168,3 +168,49 @@ route::post('/upload2', function(request $request) {
     $imageUrl = asset('storage/' . $fileName);
     return view('IMGupload', compact('imageUrl'));
 })->middleware('auth')->name('upload2');
+
+
+route::post('/csvupload', function(Request $request) {
+    if ($request->hasFile('file')) {
+        $file = $request->file('file');
+        $handle = fopen($file->getPathname(), "r");
+
+        $existingEmails = []; // Collection to store existing emails
+        
+        while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+            $name = $data[0];
+            $email = $data[1];
+            $location = $data[2];
+            $date = $data[3];
+            $time = $data[4];
+
+            // Check if email already exists in Alien model
+            $existingAlien = App\Models\Alien::where('email', $email)->first();
+            if ($existingAlien) {
+                // Handle duplicate email, such as skipping or logging the entry
+                continue; // Skip the current iteration
+            }
+            
+            $existingEmails[] = $email;
+
+            $alien = new App\Models\Alien;
+            $alien->name = $name;
+            $alien->email = $email;
+            $alien->location = $location;
+            $alien->date = $date;
+            $alien->time = $time;
+
+            $alien->save();
+        }
+        fclose($handle);
+
+        // Set session message based on import success
+        if (count($existingEmails) > 0) {
+            session()->flash('message', 'Import failed. Duplicate emails found.');
+        } else {
+            session()->flash('message', 'Import successful.');
+        }
+    }
+
+    return redirect()->back();
+})->middleware('auth')->name('csvupload');
