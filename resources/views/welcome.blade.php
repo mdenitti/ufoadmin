@@ -79,7 +79,7 @@
                                     </form>
 
                                     @auth
-                                        <a href="" class="btn btn-danger mt-2">Logout</a> 
+                                        <a href="{{route('logout')}}" class="btn btn-danger mt-2">Logout</a> 
                                         {{Auth::user()->name}}  
                                     @endauth
                                 </div>

@@ -197,13 +197,19 @@ route::post('/csvupload', function(Request $request) {
                 $alien->time = $time;
                 $alien->save();
                 session()->flash('message', 'Import successful.');
-            }
-            
+            }   
         }
         fclose($handle);
-
-       
     }
 
     return redirect()->back();
 })->middleware('auth')->name('csvupload');
+
+
+// logout function
+Route::get('/logout', function () {
+    Auth::logout();
+    session()->flash('message', 'you have been terminated');
+    return redirect()->back();
+})->name('logout');
+
