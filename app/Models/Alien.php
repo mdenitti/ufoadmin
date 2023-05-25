@@ -10,6 +10,8 @@ use App\Models\Ability;
 class Alien extends Model
 {
     use HasFactory;
+    // make guarded thingie
+    protected $guarded = [];
 
     // make a belongsto relation to country
     public function country()
